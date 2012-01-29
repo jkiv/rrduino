@@ -8,19 +8,19 @@ The Protocol
 
 The protocol is simple. Each command is one line long (ending in a newline \n), each argument separated by a single space. There are two commands so far: the hello and the update.
 
-Hello:
+### Hello
 
-h client_id
+`h client_id`
 
 The response from the server is a 32-byte blob of key material. The session key is generated from this blob by using SHA256-HMAC with the master pre-shared key.
 
-Update:
+### Update
 
-u key1 value1 [key2 value2 key3 value 3 ..] hmac
+`u key1 value1 [key2 value2 key3 value 3 ..] hmac`
 
-This message has no response. There should be at least one key-value pair, separated by spaces. The final argument, the hmac is the result of hashing preceeding data using SHA256-HMAC with the session key, i.e. SHA256-HMAC(session_key, u key1 value1 [key2 value2 key3 value 3 ..])
+This message has no response. There should be at least one key-value pair, separated by spaces. The final argument, the hmac is the lower-case ASCII representation of the result of hashing the preceeding data using SHA256-HMAC with the session key, i.e. `SHA256-HMAC(session_key, "u key1 value1 [key2 value2 key3 value 3 ..]")`
 
-These key-value pairs will be interpreted by the server. For example, temperature could be a key and 30.1 could be the value. The server can then decide how to format the rrdupdate command based on these key-value pairs.
+For example, `temperature` could be a key and `30.1` could be the value. The resulting message might look like `u temperature 30.1 a103c31cbffe0102a103c31cbffe0102a103c31cbffe0102a103c31cbffe0102`. The server can then decide how to format the rrdupdate command based on these key-value pairs.
 
 Authentication
 --------------
@@ -31,7 +31,7 @@ If the server and client have the same pre-shared key, the session key should be
 
 Once the session key is established, each message afterward will be "signed" using a hash-based message authentication code (HMAC).
 
-The server should advance the session key after every successfully authenticated message, i.e. the next key will be SHA256-HMAC(session_key, session_key).
+The server should advance the session key after every successfully authenticated message, i.e. the next key will be `SHA256-HMAC(session_key, session_key)`.
 
 The client should do the same but after each message sent, regardless if the server accepts the message's HMAC.
 
