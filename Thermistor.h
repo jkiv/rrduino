@@ -17,7 +17,6 @@ class Thermistor
     
   public:
     Thermistor(int pin);
-    void begin();
     float read();
 };
 
