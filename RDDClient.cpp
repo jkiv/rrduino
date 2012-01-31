@@ -100,7 +100,7 @@ boolean RRDClient::handshake() {
 boolean RRDClient::update(float temperature) {
   // HMAC
   Sha256.initHmac(_key.x, RRDCLIENT_KEY_SIZE);
-  Sha256.print('temperature ');
+  Sha256.print("temperature ");
   Sha256.print(temperature);
   
   String hmac = bytesToHex(Sha256.resultHmac(), RRDCLIENT_KEY_SIZE);
@@ -110,7 +110,7 @@ boolean RRDClient::update(float temperature) {
   write(' ');
   
   // .. temperature
-  print('temperature ');
+  print("temperature ");
   print(temperature);
   
   // .. hmac
