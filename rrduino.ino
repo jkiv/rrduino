@@ -13,10 +13,10 @@ byte mac[6] = CLIENT_MAC;
 
 void setup() {
   Serial.begin(9600);
-  
-  if (Ethernet.begin(mac) == 0) {
+
+  while (Ethernet.begin(mac) == 0) {
     Serial.println("Failed to configure Ethernet using DHCP");
-    for(;;);
+    delay(5000);
   }
   
   stringToKey(CLIENT_KEY, key);
@@ -35,6 +35,7 @@ void loop() {
   if (!client.connect(SERVER_IP, SERVER_PORT)) {
     Serial.print("Could not connect to server at ");
     Serial.println(SERVER_IP);
+    delay(5000);
     return;
   }
   
@@ -57,10 +58,12 @@ void loop() {
     
     // Tock! How long did that take?
     // We'll wait the remainder such that the total elapsed time is CAPTURE_DELAY
-    wait_time = CAPTURE_DELAY - (capture_start - millis());
+    wait_time = CAPTURE_DELAY - (millis() - capture_start);
 
     if (wait_time > 0) {
       delay(wait_time);
     }
   }
+  
+  Serial.println("Disconnected");
 }

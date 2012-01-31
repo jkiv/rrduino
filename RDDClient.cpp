@@ -1,6 +1,7 @@
 #include "RDDClient.h"
 
 RRDClient::RRDClient(String const& id, Key const& default_key)
+  : _id(id)
 {
   // Write the key to memory if it is not the same as default_key
   initializeKey(default_key);
@@ -76,14 +77,16 @@ boolean RRDClient::handshake() {
   }
   
   // Do several rounds on the key material
-  for(int i = 0; i < 4096; i++) {
+  for(int i = 0; i < 128; i++) {
     Sha256.initHmac(_key.x, RRDCLIENT_KEY_SIZE);
     
+    // Write the key material to the Sha256 object
     for (uint8_t j = 0; j < RRDCLIENT_KEY_SIZE; j++) {
       Sha256.write(key_material.x[j]);
     }
-    hmac_result = Sha256.resultHmac();
     
+    // Copy result back to key material for another round
+    hmac_result = Sha256.resultHmac();
     for (uint8_t j = 0; j < RRDCLIENT_KEY_SIZE; j++) {
       key_material.x[j] = hmac_result[j];
     }
@@ -91,7 +94,7 @@ boolean RRDClient::handshake() {
   
   // Our session key is now the mangled key material (sorry cryptographers)
   for (uint8_t i = 0; i < RRDCLIENT_KEY_SIZE; i++) {
-    _key.x[i] = key_material.x[i];
+    _session_key.x[i] = key_material.x[i];
   }
   
   return true;
@@ -99,8 +102,8 @@ boolean RRDClient::handshake() {
 
 boolean RRDClient::update(float temperature) {
   // HMAC
-  Sha256.initHmac(_key.x, RRDCLIENT_KEY_SIZE);
-  Sha256.print("temperature ");
+  Sha256.initHmac(_session_key.x, RRDCLIENT_KEY_SIZE);
+  Sha256.print("u temperature ");
   Sha256.print(temperature);
   
   String hmac = bytesToHex(Sha256.resultHmac(), RRDCLIENT_KEY_SIZE);
@@ -118,6 +121,9 @@ boolean RRDClient::update(float temperature) {
   print(hmac);
   write('\n'); // end of message
   
+  // Advance the session key
+  advanceSessionKey();
+  
   return true;
 }
 
@@ -128,16 +134,16 @@ void RRDClient::advanceSessionKey() {
     
     byte* hmac_result; 
     
-    Sha256.initHmac(_key.x, RRDCLIENT_KEY_SIZE);
+    Sha256.initHmac(_session_key.x, RRDCLIENT_KEY_SIZE);
     
     for (uint8_t i = 0; i < RRDCLIENT_KEY_SIZE; i++) {
-      Sha256.write(_key.x[i]);
+      Sha256.write(_session_key.x[i]);
     }
     
     hmac_result = Sha256.resultHmac();
     
     for (uint8_t i = 0; i < RRDCLIENT_KEY_SIZE; i++) {
-      _key.x[i] = hmac_result[i];
+      _session_key.x[i] = hmac_result[i];
     }
 }
 
@@ -150,13 +156,13 @@ void stringToKey(String const& s, Key &k) {
   }
 }
 
-String bytesToHex(const byte* buf, uint8_t length) {
+String bytesToHex(const byte* buf, uint16_t length) {
   const char* alphabet = "0123456789abcdef";
 
   if (length == 0) return "";
   String hexString = "";
 
-  for (int i = 0; i < length; i++) {
+  for (uint16_t i = 0; i < length; i++) {
       hexString += alphabet[buf[i]>>4];
       hexString += alphabet[buf[i]&0xf];
   }
