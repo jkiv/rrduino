@@ -28,6 +28,8 @@ def usage():
     print "                    --rrd is optional"
     print "                  The server will not run."
     print "  -k, --key       The key for the new profile"
+    print "  -r, --rrd       The path to the rrd database that this client"
+    print "                  will be updating."
     print ""
     print "See rrduino/config.py for server configuration."
     
