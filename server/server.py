@@ -20,14 +20,15 @@ def usage():
     print "  -d, --debug     Very verbose output (DEBUG ONLY)"
     print "  -h, --help      Show this message."
     print ""
-    print "  Creating a profile:"
-    print "      {0} -c profile_name -k|--key profile_key".format(sys.argv[0])
+    print "   Creating a profile:"
+    print "       {0} -c profile_name -r /path/to/db.rrd [-k|--key secret_key]".format(sys.argv[0])
     print ""
     print "  -c, --create    Specifies the name of the profile to create."
-    print "                    --key is required"
-    print "                    --rrd is optional"
-    print "                  The server will not run."
-    print "  -k, --key       The key for the new profile"
+    print "                  (The server will not run)"
+    print "  -r, --rrd       The path to the rrd database that this client"
+    print "                  will be updating."
+    print "  -k, --key       The key for the new profile (optional)"
+    print "                  (If not specified, you will be prompted for a key)"
     print ""
     print "See rrduino/config.py for server configuration."
     

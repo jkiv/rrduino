@@ -19,6 +19,7 @@ def validate(profile):
 
 def create(filename, **kwargs):
     profile_path = os.path.join(config.PROFILE_DIR, filename_of(filename))
+    kwargs['key'] = hashlib.sha256(kwargs['key']).digest()
     logging.info("Creating profile for {0}: {1}".format(filename, profile_path))
     with open(profile_path, 'w') as f:
         pickle.dump(kwargs, f)

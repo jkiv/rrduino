@@ -83,7 +83,7 @@ class RRDuinoHandler:
         self.socket.send(key_material)
 
         # Generate session key
-        for i in range(4096):
+        for i in range(128):
             key_material = hmac.new(self.session['profile']['key'], key_material, hashlib.sha256).digest()
 
         self.session['key'] = key_material # (sorry cryptographers)
