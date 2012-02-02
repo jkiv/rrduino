@@ -1,4 +1,4 @@
-#include "RDDClient.h"
+#include "RRDClient.h"
 
 RRDClient::RRDClient(String const& id, Key const& default_key)
   : _id(id)

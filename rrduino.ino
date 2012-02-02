@@ -6,7 +6,7 @@
 
 #include "config.h"
 #include "Thermistor.h"
-#include "RDDClient.h"
+#include "RRDClient.h"
 
 Key key;
 byte mac[6] = CLIENT_MAC;
