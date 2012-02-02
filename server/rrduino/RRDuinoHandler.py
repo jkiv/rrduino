@@ -32,9 +32,9 @@ class RRDuinoHandler:
     def __init__(self, sock, session):
         self.session = session
         self.socket = sock
-        self._rfile_up()
-        self._handlers = {}
-        self._message_uses_hmac = []
+        self.rfile_up()
+        self.handlers = {}
+        self.message_uses_hmac = [] 
         
         # Register standard messages
         self.register_message_type('h', self.handle_hello, False)
@@ -56,22 +56,22 @@ class RRDuinoHandler:
         
     def register_message_type(self, message_type, handler_function, requires_hmac = False):
         # Register the handler
-        self._handlers.update({message_type: handler_function})
+        self.handlers.update({message_type: handler_function})
         
         # Make sure we check HMAC for those messages that require it
         if requires_hmac:
-          self._message_uses_hmac.append(message_type)
+          self.message_uses_hmac.append(message_type)
     
     def readline(self):
         return self.rfile.readline()
 
-    def _rfile_up(self):
+    def rfile_up(self):
         self.rfile = self.socket.makefile('rb', self.rbufsize)
 
-    #def _wfile_up(self):
+    #def wfile_up(self):
     #    self.wfile = self.socket.makefile('wb', self.wbufsize)
 
-    #def _wfile_down(self):
+    #def wfile_down(self):
     #    if not self.wfile.closed:
     #        self.wfile.flush()
     #    self.wfile.close()
@@ -109,12 +109,9 @@ class RRDuinoHandler:
         # Split up the request into its parts
         request = data.split(' ')
 
-        if (len(request) % 2) == 0:
-            raise InvalidRequest("Malformed update request")
-
         # Split up update request
-        sources = request[0:-1:2]
-        data = request[1:-1:2]
+        sources = request[0::2]
+        data = request[1::2]
 
         if '' in sources:
             raise InvalidRequest("Malformed data source")
@@ -128,10 +125,10 @@ class RRDuinoHandler:
     def verify_hmac(self, message):
         # Split up update request
         parts = message.split(' ')
-        
+
         their_hmac = parts[-1]
         canonical_string = ' '.join(x for x in parts[:-1])
-        
+
         if len(their_hmac) != 64:
             raise InvalidRequest("Malformed HMAC")
 
@@ -159,7 +156,7 @@ class RRDuinoHandler:
         message_type, data = message.split(' ', 1)
          
         # Authenticate message if required
-        if message_type in self._message_uses_hmac:
+        if message_type in self.message_uses_hmac:
             # Verify HMAC
             self.verify_hmac(message)
             
@@ -167,12 +164,10 @@ class RRDuinoHandler:
             self.advance_key()
             
             # Remove hmac from data
-            data = ' '.join(data.split(' ')[:-1])
-            #data = data.split(' ', -1)[0]
-            #data = data.rsplit(' ', 1)[0]
+            data = data.rsplit(' ', 1)[0]
 
         logging.debug(self.session)
         logging.debug("Received message: {0} {1}".format(message_type, data))
 
         # Handle message type
-        self._handlers[message_type](data)
+        self.handlers[message_type](data)

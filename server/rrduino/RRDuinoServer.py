@@ -68,6 +68,6 @@ class RRDuinoServer:
                     # Something went wrong... disconnect the client!
                     logging.error(e)
                     self._cleanup_socket(s)
-		    raise
+		    #raise
 
 

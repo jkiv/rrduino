@@ -13,7 +13,7 @@ if len(sys.argv) != 3:
 HOST, PORT = sys.argv[1], int(sys.argv[2])
 
 client_id = 'test' 
-profile = {'key' : 'test'}
+profile = {'key' : hashlib.sha256('test').digest()}
 
 def send_hello(sock, client_id):
     """
@@ -47,7 +47,7 @@ def generate_session_key(master_key, key_material):
     """
     Turn key material into the session key
     """
-    for i in range(4096):
+    for i in range(128):
         key_material = hmac.new(master_key, key_material, hashlib.sha256).digest()
 
     logging.debug("session_key={0}".format([key_material]))
