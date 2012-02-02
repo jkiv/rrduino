@@ -8,14 +8,12 @@ from RRDuinoHandler import *
 
 class RRDuinoServer:
     def __init__(self, host, port, HandlerClass = RRDuinoHandler):
-        self.open_sockets = []
-
         # Create, bind, listen socket
         self.listening_socket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
         self.listening_socket.bind( (host, port) )
         self.listening_socket.listen(5)
 
-        #
+        self.open_sockets = []
         self.HandlerClass = HandlerClass
         self.sessions = {}
         self.running = False
@@ -40,7 +38,7 @@ class RRDuinoServer:
         del self.sessions[s.fileno()]
 
     def _select(self):
-        rlist, wlist, xlist = select.select( [self.listening_socket] + self.open_sockets, [], self.open_sockets )
+        rlist, wlist, xlist = select.select( [self.listening_socket] + self.open_sockets, [], [])
 
         logging.debug("# of sessions:     {0}".format(len(self.sessions)))
         logging.debug("# of open sockets: {0}".format(len(self.open_sockets)))
@@ -48,9 +46,7 @@ class RRDuinoServer:
         # Handle ready sockets:
         # .. ready to read
         for s in rlist:
-            if s in xlist:
-                continue # For some reason dead connections live here
-
+        
             if s is self.listening_socket:
                 # Accept new connection
                 new_socket, addr = self.listening_socket.accept()
@@ -73,10 +69,5 @@ class RRDuinoServer:
                     logging.error(e)
                     self._cleanup_socket(s)
 		    raise
-
-        # .. disconnected
-        for s in xlist:
-            logging.debug('Socket {0} has disconnected... cleaning up'.format(s))
-            self._cleanup_socket(s)
 
 
