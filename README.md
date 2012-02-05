@@ -34,4 +34,4 @@ The client should do the same but after each message sent, regardless if the ser
 
 ## Third-party Libraries 
 
-* Cryptosuite (https://github.com/Cathedrow/Cryptosuite)
+* Cryptosuite (https://github.com/jkiv/Cryptosuite)
