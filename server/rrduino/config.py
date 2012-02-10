@@ -25,4 +25,4 @@ HOST = '0.0.0.0'
 PORT = 60405
 
 # Directory that contains the user profiles
-PROFILE_DIR  = '/home/jonk/rrduino/server/profiles'
+PROFILE_DIR  = '/path/to/profiles'

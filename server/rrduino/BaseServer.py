@@ -4,10 +4,10 @@ import hashlib, hmac
 import logging
 
 import profile
-from RRDuinoHandler import * 
+from BaseHandler import * 
 
-class RRDuinoServer:
-    def __init__(self, host, port, HandlerClass = RRDuinoHandler):
+class BaseServer:
+    def __init__(self, host, port, HandlerClass = BaseHandler):
         # Create, bind, listen socket
         self.listening_socket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
         self.listening_socket.bind( (host, port) )
@@ -25,7 +25,6 @@ class RRDuinoServer:
 
         for s in self.open_sockets:
             _cleanup_socket(s)
-
 
     def stop(self):
         self.running = False
@@ -69,5 +68,3 @@ class RRDuinoServer:
                     logging.error(e)
                     self._cleanup_socket(s)
 		    #raise
-
-

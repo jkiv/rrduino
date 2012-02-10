@@ -8,7 +8,7 @@ import getopt
 #import rrdtool
 
 import rrduino
-from rrduino.RRDuinoServer import RRDuinoServer
+from rrduino.BaseServer import BaseServer
 
 def usage():
     print "rrduino server" 
@@ -29,6 +29,7 @@ def usage():
     print "                  will be updating."
     print "  -k, --key       The key for the new profile (optional)"
     print "                  (If not specified, you will be prompted for a key)"
+    print "  -g, --graph     Path to the output graph image file for the profile."
     print ""
     print "See rrduino/config.py for server configuration."
     
@@ -44,8 +45,8 @@ if __name__ == "__main__":
     # Get command line options
     try:
         opts, args = getopt.getopt(sys.argv[1:],
-                                   "h:c:k:r:vd",
-                                   ["help","create","key","rrd","verbose","debug"])
+                                   "h:c:k:r:g:vd",
+                                   ["help","create","key","rrd","graph","verbose","debug"])
     except getopt.GetoptError, err:
         print str(err)
         usage()
@@ -91,6 +92,7 @@ if __name__ == "__main__":
 
         # Create the new profile
         rrduino.profile.create(new_profile['id'], **(new_profile['profile']))
+        
     else:
         # Make sure our directories exist
         if not os.path.exists(rrduino.config.PROFILE_DIR):
@@ -98,7 +100,8 @@ if __name__ == "__main__":
 
         # Start the server
         logging.info("RRDuino server running on {0}:{1}".format(rrduino.config.HOST, rrduino.config.PORT))
-        server = RRDuinoServer(rrduino.config.HOST,
-                               int(rrduino.config.PORT),
-                               rrduino.config.HANDLER)
+        server = BaseServer(rrduino.config.HOST,
+                            int(rrduino.config.PORT),
+                            rrduino.config.HANDLER)
+
         server.serve_forever()
