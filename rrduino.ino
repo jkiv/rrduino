@@ -18,13 +18,11 @@ void setup() {
     Serial.println("Failed to configure Ethernet using DHCP");
     delay(5000);
   }
-  
-  stringToKey(CLIENT_KEY, key);
 }
   
 void loop() {
   
-  RRDClient  client(CLIENT_ID, key);
+  RRDClient  client(CLIENT_ID, CLIENT_KEY);
   Thermistor thermistor(A0);
   
   float temperature_C = 0.0f; // temperature reading
