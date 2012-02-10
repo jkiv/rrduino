@@ -9,7 +9,7 @@ from ExampleRRDHandler import *
 # You can write your own handler;
 # import it correctly and change
 # the class name here
-HANDLER = ExampleRRDHandler 
+HANDLER = ExampleRRDHandler
 
 # No need to change unless you've
 # extended the use of the profile.
