@@ -1,42 +1,9 @@
 #include "RRDClient.h"
 
-RRDClient::RRDClient(String const& id, Key const& default_key)
+RRDClient::RRDClient(String const& id, String const& key)
   : _id(id)
 {
-  // Write the key to memory if it is not the same as default_key
-  initializeKey(default_key);
-  
-  // Load the key from memory into _key
-  readKey(_key);
-}
-
-void RRDClient::initializeKey(Key const& default_key) {
-  boolean key_has_changed = true;
-  
-  // Is the key in memory different?
-  for(int i = 0; i < RRDCLIENT_KEY_SIZE; i++) {
-    key_has_changed |= (EEPROM.read(RRDCLIENT_NVRAM_OFFSET + i) != default_key.x[i]);
-  }
-  
-  // If the key in memory has changed, write it to memory
-  if (key_has_changed) {
-    writeKey(default_key);
-  }
-}
-
-void RRDClient::writeKey(Key const& key) {
-  for(int i = 0; i < RRDCLIENT_KEY_SIZE; i++) {
-    // Only write if it has changed
-    if (EEPROM.read(RRDCLIENT_NVRAM_OFFSET + i) != key.x[i]) {
-      EEPROM.write(RRDCLIENT_NVRAM_OFFSET + i, key.x[i]);
-    }
-  }
-}
-
-void RRDClient::readKey(Key &key) {
-  for(int i = 0; i < RRDCLIENT_KEY_SIZE; i++) {
-    key.x[i] = EEPROM.read(RRDCLIENT_NVRAM_OFFSET + i);
-  }
+  stringToKey(key, _key);
 }
 
 int RRDClient::read(byte* buffer, uint16_t buffer_length, unsigned long timeout_ms) {
@@ -63,30 +30,71 @@ int RRDClient::read(byte* buffer, uint16_t buffer_length, unsigned long timeout_
   return bytesRead;
 }
 
+void RRDClient::finalizeMessage(boolean requires_hmac) {
+    if (requires_hmac) {
+      String hmac = bytesToHex(Sha256.resultHmac(), RRDCLIENT_KEY_SIZE);
+
+      // Finish off message with the HMAC
+      Client::write(' ');
+      Client::print(hmac);
+
+      // Advance the session key
+      advanceSessionKey();
+    }
+
+    // Finish the message off with a delimiter
+    Client::write('\n');
+}
+
+void RRDClient::advanceSessionKey() {
+    // Hash the session key to advance it to the next key
+    
+    byte* hmac_result; 
+    
+    Sha256.initHmac(_session_key.x, RRDCLIENT_KEY_SIZE);
+    
+    // Write the key to the digest
+    for (uint8_t i = 0; i < RRDCLIENT_KEY_SIZE; i++) {
+      Sha256.write(_session_key.x[i]);
+    }
+    
+    // Copy digest result back to the key
+    hmac_result = Sha256.resultHmac();
+
+    for (uint8_t i = 0; i < RRDCLIENT_KEY_SIZE; i++) {
+      _session_key.x[i] = hmac_result[i];
+    }
+}
+
+
+// Protocol ///////////////////////////////////////////////////////////////////
+
 boolean RRDClient::handshake() {
-  write('h');
-  write(' ');
+  // Send 'hello'
+  print("h ");
   print(_id);
-  write('\n'); // end of message
+  finalizeMessage(false);
   
   byte* hmac_result;  
   Key   key_material;
   
+  // Get the key material in response
   if (read(key_material.x, RRDCLIENT_KEY_SIZE) != RRDCLIENT_KEY_SIZE) {
     return false;
   }
   
-  // Do several rounds on the key material
+  // Do several rounds on the key material to generate session key (sorry cryptographers)
   for(int i = 0; i < 128; i++) {
     Sha256.initHmac(_key.x, RRDCLIENT_KEY_SIZE);
     
-    // Write the key material to the Sha256 object
+    // Write the key material for digest
     for (uint8_t j = 0; j < RRDCLIENT_KEY_SIZE; j++) {
       Sha256.write(key_material.x[j]);
     }
     
-    // Copy result back to key material for another round
+    // Copy digest back into key material for another round
     hmac_result = Sha256.resultHmac();
+
     for (uint8_t j = 0; j < RRDCLIENT_KEY_SIZE; j++) {
       key_material.x[j] = hmac_result[j];
     }
@@ -101,71 +109,17 @@ boolean RRDClient::handshake() {
 }
 
 boolean RRDClient::update(float temperature) {
-  // HMAC
+  // Write to digest
   Sha256.initHmac(_session_key.x, RRDCLIENT_KEY_SIZE);
   Sha256.print("u temperature ");
   Sha256.print(temperature);
-  
-  String hmac = bytesToHex(Sha256.resultHmac(), RRDCLIENT_KEY_SIZE);
-  
-  // Send to server
-  write('u');
-  write(' ');
-  
-  // .. temperature
-  print("temperature ");
+
+  // Send message 
+  print("u temperature ");
   print(temperature);
-  
-  // .. hmac
-  write(' ');
-  print(hmac);
-  write('\n'); // end of message
-  
-  // Advance the session key
-  advanceSessionKey();
+
+  // Send footer
+  finalizeMessage(true);
   
   return true;
-}
-
-void RRDClient::advanceSessionKey() {
-    // Hash the session key to advance it to the next key
-    //  - we do this after each send
-    //  - the server does this after each successful received message
-    
-    byte* hmac_result; 
-    
-    Sha256.initHmac(_session_key.x, RRDCLIENT_KEY_SIZE);
-    
-    for (uint8_t i = 0; i < RRDCLIENT_KEY_SIZE; i++) {
-      Sha256.write(_session_key.x[i]);
-    }
-    
-    hmac_result = Sha256.resultHmac();
-    
-    for (uint8_t i = 0; i < RRDCLIENT_KEY_SIZE; i++) {
-      _session_key.x[i] = hmac_result[i];
-    }
-}
-
-void stringToKey(String const& s, Key &k) {
-  Sha256.init();
-  Sha256.print(s);
-  byte* hash_result = Sha256.result();
-  for (uint8_t i = 0; i < RRDCLIENT_KEY_SIZE; i++) {
-    k.x[i] = hash_result[i];
-  }
-}
-
-String bytesToHex(const byte* buf, uint16_t length) {
-  const char* alphabet = "0123456789abcdef";
-
-  if (length == 0) return "";
-  String hexString = "";
-
-  for (uint16_t i = 0; i < length; i++) {
-      hexString += alphabet[buf[i]>>4];
-      hexString += alphabet[buf[i]&0xf];
-  }
-  
-  return hexString;
 }

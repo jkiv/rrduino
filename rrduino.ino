@@ -2,10 +2,10 @@
 #include <SPI.h>
 #include <Ethernet.h>
 #include <sha256.h>
-#include <EEPROM.h>
 
 #include "config.h"
 #include "Thermistor.h"
+#include "Key.h"
 #include "RRDClient.h"
 
 Key key;
