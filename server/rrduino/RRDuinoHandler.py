@@ -8,13 +8,9 @@ class RRDuinoHandler(BaseHandler):
     """
     
     def __init__(self, sock, session):
-        super(RRDuinoHandler, self).__init__(sock, session)
+        BaseHandler.__init__(self, sock, session)
         
         self.register_message_type('u', self.handle_update, True) # Update message
-        
-        if not os.path.isfile(profile['rrd']):
-            # rrd database does not exist for user... create it.
-            self.create(profile)
         
     def create(self, path):
         """
@@ -49,6 +45,10 @@ class RRDuinoHandler(BaseHandler):
 
         if '' in data:
             raise InvalidRequest("Malformed data")
+
+        # Create profile if it doesn't exist
+        if not os.path.isfile(self.session['profile']['rrd']):
+            self.create(self.session['profile'])
 
         # Update the rrd database
         self.update(self.session['profile'], **dict(zip(sources, data)))

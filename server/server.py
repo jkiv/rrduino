@@ -79,6 +79,8 @@ if __name__ == "__main__":
             new_profile['profile']['key'] = a
         elif o in ('-r', '--rrd'):
             new_profile['profile']['rrd'] = a
+        elif o in ('-g', '--graph'):
+            new_profile['profile']['graph'] = a
         else:
             assert False, "Unhandled option: {0}".format(o) 
 

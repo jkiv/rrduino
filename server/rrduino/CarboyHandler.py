@@ -11,7 +11,7 @@ class CarboyHandler(RRDuinoHandler):
 
     def update(self, profile, **kwargs):
         # We're expecting to update the temperature
-        rrdtool.update(profile['rrd'], 'N:{temperature}'.format(kwargs))
+        rrdtool.update(profile['rrd'], 'N:{temperature}'.format(**kwargs))
     
     def graph(self, profile, **kwargs):
         # Plot the temperature
