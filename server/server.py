@@ -29,7 +29,6 @@ def usage():
     print "                  will be updating."
     print "  -k, --key       The key for the new profile (optional)"
     print "                  (If not specified, you will be prompted for a key)"
-    print "  -g, --graph     Path to the output graph image file for the profile."
     print ""
     print "See rrduino/config.py for server configuration."
     
@@ -45,8 +44,8 @@ if __name__ == "__main__":
     # Get command line options
     try:
         opts, args = getopt.getopt(sys.argv[1:],
-                                   "h:c:k:r:g:vd",
-                                   ["help","create","key","rrd","graph","verbose","debug"])
+                                   "h:c:k:r:vd",
+                                   ["help","create","key","rrd","verbose","debug"])
     except getopt.GetoptError, err:
         print str(err)
         usage()
@@ -79,8 +78,6 @@ if __name__ == "__main__":
             new_profile['profile']['key'] = a
         elif o in ('-r', '--rrd'):
             new_profile['profile']['rrd'] = a
-        elif o in ('-g', '--graph'):
-            new_profile['profile']['graph'] = a
         else:
             assert False, "Unhandled option: {0}".format(o) 
 

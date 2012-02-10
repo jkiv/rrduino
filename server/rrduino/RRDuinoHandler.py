@@ -24,12 +24,6 @@ class RRDuinoHandler(BaseHandler):
         """
         pass
 
-    def graph(self, profile, **kwargs):    
-        """
-        Save the graph of the rrd database. Path to output image should be profile['graph'].
-        """
-        pass
-
     def handle_update(self, data):
         logging.debug('Handling update: {0}'.format(data))
 
@@ -52,6 +46,3 @@ class RRDuinoHandler(BaseHandler):
 
         # Update the rrd database
         self.update(self.session['profile'], **dict(zip(sources, data)))
-        
-        # Graph the rrd database
-        self.graph(self.session['profile'])

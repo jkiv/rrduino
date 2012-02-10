@@ -17,10 +17,6 @@ def validate(profile):
     if not profile['rrd']:
         raise ValueError("A path to an rrd database is required.")
         
-    # graph path
-    if not profile['graph']:
-       print "A path to an output graph is recommended, but not required."
-
 def create(filename, **kwargs):
     profile_path = os.path.join(config.PROFILE_DIR, filename_of(filename))
     kwargs['key'] = hashlib.sha256(kwargs['key']).digest()

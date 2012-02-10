@@ -14,8 +14,7 @@ HANDLER = ExampleRRDHandler
 # No need to change unless you've
 # extended the use of the profile.
 DEFAULT_PROFILE = {'key':   None,
-                   'rrd':   None,
-                   'graph': None}
+                   'rrd':   None}
 
 # Host name to bind on:
 #   0.0.0.0    - allow all connections

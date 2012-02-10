@@ -14,12 +14,3 @@ class CarboyHandler(RRDuinoHandler):
     def update(self, profile, **kwargs):
         # We're expecting to update the temperature
         rrdtool.update(profile['rrd'], 'N:{temperature}'.format(**kwargs))
-    
-    def graph(self, profile, **kwargs):
-        # Plot the temperature
-        rrdtool.graph(profile['graph'],
-                      '--imgformat', 'PNG',
-                      '--vertical-label', 'Temperature (C)',
-                      '--start', 'now-1w',
-                      'DEF:T={0}:temperature:AVERAGE'.format(profile['rrd']),
-                      'LINE2:T#FF0000')

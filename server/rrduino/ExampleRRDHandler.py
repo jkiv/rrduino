@@ -11,9 +11,3 @@ class ExampleRRDHandler(RRDuinoHandler):
         # We should use kwargs to update the rrd database
         print self.__class__, "update"
         print profile['rrd'], kwargs
-
-    def graph(self, profile, **kwargs):
-        # Render your rrd database to an image
-        print self.__class__, "graph"
-        print profile['rrd'], profile['graph'], kwargs
-

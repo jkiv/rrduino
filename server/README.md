@@ -25,30 +25,28 @@ Configuration
 Creating Profiles
 -----------------
 
-A profile stores information about a client. This information includes the client's pre-shared key, a path to an rrdtool database, and a path to an output graph. A single server can handle many clients of the same type.
+A profile stores information about a client. This information includes the client's pre-shared key and a path to an rrdtool database. A single server can handle many clients of the same type.
 
 Before proceeding, make sure `rrduino/config.py` contains the path to the directory which will store the profiles.
 
 For example, to create a profile for `fridge`
 
-`server.py -c fridge -r /path/to/fridge.rrd -g /path/to/fridge_graph.png`
+`server.py -c fridge -r /path/to/fridge.rrd`
 
 You can also specify the key using the -k option, but if it is omitted then you will be prompted for a key.
 
-The above will create a profile for the client `fridge` which will use the rrdtool database `/path/to/fridge.rrd` and will export a graph to `/path/to/fridge_graph.png`.
+The above will create a profile for the client `fridge` which will use the rrdtool database `/path/to/fridge.rrd`.
 
 Writing a Handler
 -----------------
 
-In order to create, update, or graph an rrd database properly, a handler needs to be written.
+In order to create or update an rrd database properly, a handler needs to be written.
 
 Handlers which update rrdtool databases are classes which derive from `RRDuinoHandler`. Handlers should implement the following three methods:
 
 `create(self, profile, **kwargs)` - called before updating if the rrd database does not exist.
 
 `update(self, profile, **kwargs)` - called when an update message is received from the client. Key-value pairs sent by the client are available in `kwargs`. The path to the rrd database is available by `profile['rrd']`.
-
-`graph(self, profile, **kwargs)` - called at the end of receiving an update message, after `update()` is called.
 
 Handlers are placed in `rrduino/` and set for use in `rrduino/config.py`.
 
