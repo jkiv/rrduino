@@ -4,12 +4,12 @@ rrduino Server Configuration
 
 # If you make a custom handler, place it in the rrduino/
 # folder and include it here
-from ExampleHandler import *
+from ExampleRRDHandler import *
 
 # You can write your own handler;
 # import it correctly and change
 # the class name here
-HANDLER = ExampleHandler 
+HANDLER = ExampleRRDHandler 
 
 # No need to change unless you've
 # extended the use of the profile.
