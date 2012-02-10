@@ -20,7 +20,7 @@ class RRDClient : public EthernetClient {
     void finalizeMessage(boolean requires_hmac = false);
     
   public:
-    RRDClient(String const& id, Key const& key);
+    RRDClient(String const& id, String const& key);
     boolean handshake(); //!< Performs the 'hello' and session key generation handshake
     boolean update(float temperature); //!< Send an "update" command
 };

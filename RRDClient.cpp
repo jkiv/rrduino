@@ -35,15 +35,15 @@ void RRDClient::finalizeMessage(boolean requires_hmac) {
       String hmac = bytesToHex(Sha256.resultHmac(), RRDCLIENT_KEY_SIZE);
 
       // Finish off message with the HMAC
-      Client::write(' ');
-      Client::print(hmac);
+      write(' ');
+      print(hmac);
 
       // Advance the session key
       advanceSessionKey();
     }
 
     // Finish the message off with a delimiter
-    Client::write('\n');
+    write('\n');
 }
 
 void RRDClient::advanceSessionKey() {

@@ -1,6 +1,7 @@
 #ifndef RRDCLIENT_KEY_H
 #define RRDCLIENT_KEY_H
 
+#include <Arduino.h>
 #include <sha256.h>
 
 #define RRDCLIENT_KEY_SIZE 32
