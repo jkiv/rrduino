@@ -35,7 +35,8 @@ def usage():
 if __name__ == "__main__":  
     # Defaults
     # .. logging
-    logging.basicConfig(level=logging.ERROR)
+    #logging.basicConfig(level=logging.ERROR)
+    logging.basicConfig(level=logging.DEBUG)
 
     # .. new profile
     new_profile = {'id'     : None,
