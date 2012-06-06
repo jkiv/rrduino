@@ -42,7 +42,7 @@ Writing a Handler
 
 In order to create or update an rrd database properly, a handler needs to be written.
 
-Handlers which update rrdtool databases are classes which derive from `RRDuinoHandler`. Handlers should implement the following three methods:
+Handlers which update rrdtool databases are classes which derive from `RRDuinoHandler`. Handlers should implement the following two methods:
 
 `create(self, profile, **kwargs)` - called before updating if the rrd database does not exist.
 
