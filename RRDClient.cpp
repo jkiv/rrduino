@@ -84,6 +84,8 @@ boolean RRDClient::handshake() {
   }
   
   // Do several rounds on the key material to generate session key (sorry cryptographers)
+  // TODO we can simplify this by adding a `key' parameter to advanceSessionKey() and using
+  //      it in the following loop (instead of repeating ourselves...)
   for(int i = 0; i < 128; i++) {
     Sha256.initHmac(_key.x, RRDCLIENT_KEY_SIZE);
     
