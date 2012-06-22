@@ -2,6 +2,12 @@ import rrdtool
 from RRDuinoHandler import *
 
 class CarboyHandler(RRDuinoHandler):
+    '''An example of how to implement an RRDuinoHandler.
+       This class specifies how this particular rrdtool
+       database should be constructed (via create()) as
+       well has how it should be updated (via update()).
+    '''
+
     def create(self, profile):
         # Create our database
         rrdtool.create(profile['rrd'],
