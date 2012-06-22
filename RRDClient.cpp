@@ -6,6 +6,10 @@ RRDClient::RRDClient(String const& id, String const& key)
   stringToKey(key, _key);
 }
 
+/** Reads at most 'buffer_length' bytes into 'buffer'. Reading will stop
+ * after 'timeout_ms' milliseconds of no data being available to read.
+ * @returns number of bytes read into 'buffer'
+ */
 int RRDClient::read(byte* buffer, uint16_t buffer_length, unsigned long timeout_ms) {
   uint16_t bytesRead = 0;
   byte c;
@@ -30,11 +34,20 @@ int RRDClient::read(byte* buffer, uint16_t buffer_length, unsigned long timeout_
   return bytesRead;
 }
 
+/** Finalizes the message. If 'requires_hmac' is true, then the HMAC
+ * result is sent. When the HMAC is sent, the session key is advanced
+ * such that it is one value ahead of the server. Finally, regardless of
+ * the value of 'requires_hmac', a newline (the end-of-message delimeter)
+ * is sent.
+ * 
+ * Note: using HMAC assumes Sha256 has already been initialized and fed
+ *       with the data. We simply call resultHmac() here.
+ */
 void RRDClient::finalizeMessage(boolean requires_hmac) {
     if (requires_hmac) {
       String hmac = bytesToHex(Sha256.resultHmac(), RRDCLIENT_KEY_SIZE);
 
-      // Finish off message with the HMAC
+      // Send the HMAC portion of the message: ' HMAC'
       write(' ');
       print(hmac);
 
@@ -46,6 +59,9 @@ void RRDClient::finalizeMessage(boolean requires_hmac) {
     write('\n');
 }
 
+/** Advances the session key. This is done by hashing the
+ * session key with itself (sorry cryptographers).
+ */
 void RRDClient::advanceSessionKey() {
     // Hash the session key to advance it to the next key
     
@@ -69,6 +85,13 @@ void RRDClient::advanceSessionKey() {
 
 // Protocol ///////////////////////////////////////////////////////////////////
 
+/** Performs the handshake. Here, the client identifies itself
+ * and the server provides the session key material. The session
+ * key is derived from this key material by hashing it with the
+ * master key a large number of times (sorry cryptographers).
+ * 
+ * @returns whether or not the handshake was successful
+ */
 boolean RRDClient::handshake() {
   // Send 'hello'
   print("h ");
@@ -110,6 +133,12 @@ boolean RRDClient::handshake() {
   return true;
 }
 
+/** Sends an update command
+ * TODO: this should be defined in a subclass for the particular
+ *       function (or at least take arbitrary key/value pairs)
+ * 
+ * @returns whether or not the update command was successful.
+ */
 boolean RRDClient::update(float temperature) {
   // Write to digest
   Sha256.initHmac(_session_key.x, RRDCLIENT_KEY_SIZE);
@@ -122,6 +151,8 @@ boolean RRDClient::update(float temperature) {
 
   // Send footer
   finalizeMessage(true);
+  
+  // TODO: server verification
   
   return true;
 }
