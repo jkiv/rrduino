@@ -2,29 +2,33 @@ import logging
 from BaseHandler import *
 
 class RRDuinoHandler(BaseHandler):
-    """
-    Updates an rrdtool database for the connected client.
-    Subclasses implement specifics about the rrd database.
-    """
+    '''Updates an rrdtool database for the connected client.
+       Subclasses implement specifics about their rrdtool database.
+    '''
     
     def __init__(self, sock, session):
         BaseHandler.__init__(self, sock, session)
         
-        self.register_message_type('u', self.handle_update, True) # Update message
+        # Register 'update' message type
+        self.register_message_type('u', self.handle_update, True)
         
     def create(self, path):
-        """
-        Implemented to create the rrd database if it does not exist. Path to database should be profile['rrd'].
-        """
+        '''Implemented to create the rrd database if it does not
+           exist. Path to database should be profile['rrd'].
+        '''
         pass
         
     def update(self, profile, **kwargs):
-        """
-        Update the database given **kwargs. Path to database should be profile['rrd'].
-        """
+        '''Update the database given **kwargs. Path to database
+           should be profile['rrd']. A particular implementation
+           knows what values in **kwargs to expect from the client.
+        '''
         pass
 
     def handle_update(self, data):
+        '''Handles an 'update' command.
+        '''
+        
         logging.debug('Handling update: {0}'.format(data))
 
         # Split up the request into its parts
