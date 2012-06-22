@@ -13,13 +13,26 @@ class BaseServer:
         self.listening_socket.bind( (host, port) )
         self.listening_socket.listen(5)
 
-        self.open_sockets = []
-        self.HandlerClass = HandlerClass
-        self.sessions = {}
-        self.running = False
+        self.running = False              # Whether the server is running or not
+        
+        self.open_sockets = []            # All open sockets (to select() on)
+        
+        self.HandlerClass = HandlerClass  # An instance of this class is created
+                                          # to handle a server message
+                                          # TODO: client-specific handler classes
+
+        self.sessions = {}                # Persistent data storage for each connection
+                                          # (which we refer to as a "session")
+
+        # Default session state
+        self.default_session = {'id'      : None,
+                                'key'     : None,
+                                'profile' : None}
 
     def serve_forever(self):
         self.running = True
+
+        # Main server loop
         while self.running:
             self._select()
 
@@ -27,16 +40,21 @@ class BaseServer:
             _cleanup_socket(s)
 
     def stop(self):
+    	# Should cause server loop to exit
         self.running = False
 
     def _cleanup_socket(self, s):
-        # Remove connection
         logging.debug("Cleaning up socket {0}".format(s))
+
+        # Shutdown connection (in a TCP sense)
         s.shutdown(socket.SHUT_RDWR)
+
+        # Remove forget socket and session information
         self.open_sockets.remove(s)
         del self.sessions[s.fileno()]
 
     def _select(self):
+    	# select() on all known sockets (for reading)
         rlist, wlist, xlist = select.select( [self.listening_socket] + self.open_sockets, [], [])
 
         logging.debug("# of sessions:     {0}".format(len(self.sessions)))
@@ -45,26 +63,33 @@ class BaseServer:
         # Handle ready sockets:
         # .. ready to read
         for s in rlist:
-        
+
             if s is self.listening_socket:
                 # Accept new connection
                 new_socket, addr = self.listening_socket.accept()
                 self.open_sockets.append(new_socket)
 
                 # Initialize empty session for user
-                self.sessions[new_socket.fileno()] = {'id'      : None,
-                                                      'key'     : None,
-                                                      'profile' : None}
+                self.sessions[new_socket.fileno()] = self.default_session.copy()
+
             else:
                 # Get connection's session data
                 session = self.sessions[s.fileno()]
 
                 # Handle the request
                 try:
+                    # We use self.HandlerClass to handle the ready socket.
+                    # In practise, a subclass of BaseHandler is written for
+                    # the user's particular needs.
+                    # TODO: HandlerClass is specified on a connection-by-
+                    #       connection basis allowing different devices to
+                    #       send different types of messages.
                     handler = self.HandlerClass(s, session)
                     handler.handle()
+
                 except Exception as e:
-                    # Something went wrong... disconnect the client!
+                    # Something went wrong. Let's disconnect the client as
+                    # a result.
                     logging.error(e)
                     self._cleanup_socket(s)
 		    #raise
