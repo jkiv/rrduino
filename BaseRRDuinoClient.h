@@ -25,17 +25,17 @@ class BaseRRDuinoClient : public EthernetClient {
 
     // Message-related functions
     void initializeMessage(String const& message_type, boolean requires_hmac = false);
-    void addMessageValue(String const& key, float value, boolean requires_hmac = false);
-    void addMessageValue(String const& key, int value, boolean requires_hmac = false);
-    void addMessageValue(String const& key, String const& value, boolean requires_hmac = false);
+    void addUpdateField(String const& key, float value, boolean requires_hmac = false);
+    void addUpdateField(String const& key, int value, boolean requires_hmac = false);
+    void addUpdateField(String const& key, String const& value, boolean requires_hmac = false);
     void finalizeMessage(boolean requires_hmac = false);
 
   public:
     BaseRRDuinoClient(String const& id, String const& key);
 
     // Getters/Setters
-    unsigned long tickInterval(unsigned long tick_interval) { return _tick_interval }; //!< Get wait time between calls to tick()
-    void tickInterval(unsigned long tick_interval) { _tick_interval = tick_interval; }; //!< Set wait time between calls to tick()
+    unsigned long tickInterval() { return _tick_interval; } //!< Get wait time between calls to tick()
+    void tickInterval(unsigned long tick_interval) { _tick_interval = tick_interval; } //!< Set wait time between calls to tick()
 
     // Protocol-related functions
     boolean handshake(); //!< Performs the 'hello' and session key generation handshake

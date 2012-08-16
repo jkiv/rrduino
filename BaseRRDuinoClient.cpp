@@ -1,4 +1,4 @@
-#include "BaseRRDClient.h"
+#include "BaseRRDuinoClient.h"
 
 BaseRRDuinoClient::BaseRRDuinoClient(String const& id, String const& key)
   : _id(id)
@@ -10,7 +10,7 @@ BaseRRDuinoClient::BaseRRDuinoClient(String const& id, String const& key)
  * after 'timeout_ms' milliseconds of no data being available to read.
  * @returns number of bytes read into 'buffer'
  */
-int RRDClient::read(byte* buffer, uint16_t buffer_length, unsigned long timeout_ms) {
+int BaseRRDuinoClient::read(byte* buffer, uint16_t buffer_length, unsigned long timeout_ms) {
   uint16_t bytesRead = 0;
   byte c;
   unsigned long last_time_available = millis();
@@ -37,7 +37,7 @@ int RRDClient::read(byte* buffer, uint16_t buffer_length, unsigned long timeout_
 /** Advances the session key. This is done by hashing the
  * session key with the master key (sorry cryptographers).
  */
-void RRDClient::advanceSessionKey() {
+void BaseRRDuinoClient::advanceSessionKey() {
   // Hash the session key to advance it to the next key
   
   byte* hmac_result; 
@@ -67,7 +67,7 @@ void RRDClient::advanceSessionKey() {
  * 
  * @returns whether or not the handshake was successful
  */
-boolean RRDClient::handshake() {
+boolean BaseRRDuinoClient::handshake() {
   // Send 'hello'
   print("h ");
   print(_id);
@@ -110,7 +110,7 @@ boolean RRDClient::handshake() {
 }
 
 //!< Initializes message of 'message_type'.
-void BaseRRDuinoClient::initializeMessage(String const& message_type, boolean requires_hmac = false) {
+void BaseRRDuinoClient::initializeMessage(String const& message_type, boolean requires_hmac) {
   print(message_type);
 
   if (requires_hmac) {
@@ -119,7 +119,7 @@ void BaseRRDuinoClient::initializeMessage(String const& message_type, boolean re
   }
 }
 
-void BaseRRDuinoClient::addMessageValue(String const& key, float value, boolean requires_hmac = false) {
+void BaseRRDuinoClient::addUpdateField(String const& key, float value, boolean requires_hmac) {
   write(' ');
   print(key);
   write(' ');
@@ -134,7 +134,7 @@ void BaseRRDuinoClient::addMessageValue(String const& key, float value, boolean 
   }
 }
 
-void BaseRRDuinoClient::addMessageValue(String const& key, int value, boolean requires_hmac = false) {
+void BaseRRDuinoClient::addUpdateField(String const& key, int value, boolean requires_hmac) {
   write(' ');
   print(key);
   write(' ');
@@ -149,7 +149,7 @@ void BaseRRDuinoClient::addMessageValue(String const& key, int value, boolean re
   }
 }
 
-void BaseRRDuinoClient::addMessageValue(String const& key, String const& value, boolean requires_hmac = false) {
+void BaseRRDuinoClient::addUpdateField(String const& key, String const& value, boolean requires_hmac) {
   write(' ');
   print(key);
   write(' ');
@@ -173,7 +173,7 @@ void BaseRRDuinoClient::addMessageValue(String const& key, String const& value, 
  * Note: using HMAC assumes Sha256 has already been initialized and fed
  *       with the data. We simply call resultHmac() here.
  */
-void RRDClient::finalizeMessage(boolean requires_hmac) {
+void BaseRRDuinoClient::finalizeMessage(boolean requires_hmac) {
   if (requires_hmac) {
     String hmac = bytesToHex(Sha256.resultHmac(), RRDUINO_CLIENT_KEY_SIZE);
 

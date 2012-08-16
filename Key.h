@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include <sha256.h>
 
-#define RRDCLIENT_KEY_SIZE 32
+#define RRDUINO_CLIENT_KEY_SIZE 32
 
 typedef struct Key { byte x[RRDUINO_CLIENT_KEY_SIZE]; } Key;
 

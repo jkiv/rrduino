@@ -4,7 +4,7 @@ void stringToKey(String const& s, Key &k) {
   Sha256.init();
   Sha256.print(s);
   byte* hash_result = Sha256.result();
-  for (uint8_t i = 0; i < RRDCLIENT_KEY_SIZE; i++) {
+  for (uint8_t i = 0; i < RRDUINO_CLIENT_KEY_SIZE; i++) {
     k.x[i] = hash_result[i];
   }
 }

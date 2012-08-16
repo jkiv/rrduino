@@ -2,9 +2,10 @@
 #define RRDUINO_CLIENT_H
 
 #include <Arduino.h>
+#include "Thermistor.h"
 #include "BaseRRDuinoClient.h"
 
-class RRDuinoClient : protected BaseRRDuinoClient { 
+class RRDuinoClient : public BaseRRDuinoClient { 
   private:
     Thermistor _thermistor;
     float _temperature_C;
