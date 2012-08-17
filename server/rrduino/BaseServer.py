@@ -10,6 +10,7 @@ class BaseServer:
     def __init__(self, host, port, HandlerClass = BaseHandler):
         # Create, bind, listen socket
         self.listening_socket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+        self.listening_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.listening_socket.bind( (host, port) )
         self.listening_socket.listen(5)
 
@@ -48,7 +49,10 @@ class BaseServer:
         logging.debug("Cleaning up socket {0}".format(s))
 
         # Shutdown connection (in a TCP sense)
-        s.shutdown(socket.SHUT_RDWR)
+        try:
+          s.shutdown(socket.SHUT_RDWR)
+        except:
+          pass # FIXME
 
         # Remove forget socket and session information
         self.open_sockets.remove(s)
@@ -97,4 +101,4 @@ class BaseServer:
                     # a result.
                     logging.error(e)
                     self._cleanup_socket(s)
-		    #raise
+          	    #raise

@@ -1,0 +1,12 @@
+  {
+    "key": "secret123",
+    "handler_options": {
+      "path": "/path/to/rrduino/rrds/example.rrd",
+      "create": ["--step", "60",
+                 "DS:temperature:GAUGE:120:-50:110",
+                 "RRA:AVERAGE:0.5:5:288",
+                 "RRA:AVERAGE:0.5:60:720",
+                 "RRA:AVERAGE:0.5:240:1096"],
+      "update": "N:{temperature}"
+    }
+  }

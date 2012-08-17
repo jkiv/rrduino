@@ -108,12 +108,10 @@ class BaseHandler:
         logging.debug("master_key={0}".format([self.session['profile']['key']]))
 
         # Generate session key
-        H = hmac.new(self.session['profile']['key'], key_material, hashlib.sha256)
-
         for i in range(self.key_gen_rounds):
-	  H.update(H.digest())
+	  key_material = hmac.new(self.session['profile']['key'], key_material, hashlib.sha256).digest()
 
-        self.session['key'] = H.digest() # (sorry cryptographers)
+        self.session['key'] = key_material # (sorry cryptographers)
 
         logging.debug("session_key={0}".format([self.session['key']]))
 
@@ -137,7 +135,7 @@ class BaseHandler:
             logging.debug("Could not verify HMAC:\n  ours:   {0}\n  theirs: {1}".format(our_hmac, their_hmac))
             raise InvalidRequest("Bad HMAC")
         
-    def advance_key(self):
+    def advance_session_key(self):
         self.session['key'] = hmac.new(self.session['profile']['key'], self.session['key'], hashlib.sha256).digest()
     
     def handle(self):
@@ -166,7 +164,7 @@ class BaseHandler:
             self.verify_hmac(message)
             
             # Advance key
-            self.advance_key()
+            self.advance_session_key()
             
             # Remove hmac from data
             data = data.rsplit(' ', 1)[0]
