@@ -1,6 +1,6 @@
 # rrduino
 
-The goal of this project is to make the _Arduino_ (http://www.arduino.cc/) a versitile little time-based data collection device. The data that the _Arduino_ collects is to be sent of to a server over Ethernet (TCP/IP) where the data can be added to an RRDTool database (http://oss.oetiker.ch/rrdtool/).
+The goal of this project is to make the _Arduino_ (http://www.arduino.cc/) a versitile little time-based data collection device. The data that the _Arduino_ collects is to be sent of to a server over Ethernet (TCP/IP) where the data can be added to an _rrdtool_ database (http://oss.oetiker.ch/rrdtool/).
 
 ## Client Configuration
 
@@ -16,7 +16,7 @@ To configure your device, edit `config.h` according to the instructions outlined
 
 `CLIENT_KEY` - the pre-shared key as specified when creating the profile server-side
 
-`CAPTURE_DELAY` - the time between collected and uploaded data points
+`CAPTURE_DELAY_MS` - the time between collected and uploaded data points (in milliseconds)
 
 ## The Protocol
 

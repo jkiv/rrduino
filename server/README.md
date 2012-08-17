@@ -45,12 +45,15 @@ Profiles are JSON-formatted objects. Here is an example profile (or see `example
 The root object contains two values:
 
 `key` - the client's pre-shared key.
+
 `handler_options` - options for managing an _rrdtool_ database
 
 By default, `handler_options` expects three values:
 
 `path` - the full file path to the _rrdtool_ database.
+
 `create` - a list of options used to instantiate the _rrdtool_ database. (Technically speaking, these strings correspond to `rrdtool.create` options.)
+
 `update` - a string used to update the _rrdtool_ database. In the above example, we are expecting the client to send a value with the key `temperature` in its `update` commands (as shown by the use of `{temperature}`).
 
 Custom Handlers
