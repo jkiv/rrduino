@@ -10,7 +10,7 @@ BaseRRDuinoClient::BaseRRDuinoClient(String const& id, String const& key)
  * after 'timeout_ms' milliseconds of no data being available to read.
  * @returns number of bytes read into 'buffer'
  */
-int BaseRRDuinoClient::read(byte* buffer, uint16_t buffer_length, unsigned long timeout_ms) {
+int BaseRRDuinoClient::readBytes(byte* buffer, uint16_t buffer_length, unsigned long timeout_ms) {
   uint16_t bytesRead = 0;
   byte c;
   unsigned long last_time_available = millis();
@@ -68,42 +68,40 @@ void BaseRRDuinoClient::advanceSessionKey() {
  * @returns whether or not the handshake was successful
  */
 boolean BaseRRDuinoClient::handshake() {
+  byte* hmac_result;
+  Key key_material;
+  
   // Send 'hello'
   print("h ");
   print(_id);
   finalizeMessage(false);
   
-  byte* hmac_result;  
-  Key   key_material;
-  
   // Get the key material in response
-  if (read(key_material.x, RRDUINO_CLIENT_KEY_SIZE) != RRDUINO_CLIENT_KEY_SIZE) {
+  if (readBytes(key_material.x, RRDUINO_CLIENT_KEY_SIZE) != RRDUINO_CLIENT_KEY_SIZE) {
     return false;
   }
   
-  // Do several rounds on the key material to generate session key (sorry cryptographers)
-  // TODO we can simplify this by adding a `key' parameter to advanceSessionKey() and using
-  //      it in the following loop (instead of repeating ourselves...)
-  Sha256.initHmac(_key.x, RRDUINO_CLIENT_KEY_SIZE);
-
+  // Perform several iterations of hashing on the key material
   for(int i = 0; i < KEY_ITERATIONS; i++) {
+    // Do several rounds on the key material to generate session key (sorry cryptographers)
+    Sha256.initHmac(_key.x, RRDUINO_CLIENT_KEY_SIZE);
     
-    // Write the key material for digest
+    // Write material to HMAC (first iteration)
     for (uint8_t j = 0; j < RRDUINO_CLIENT_KEY_SIZE; j++) {
       Sha256.write(key_material.x[j]);
     }
     
-    // Copy digest back into key material for another round
     hmac_result = Sha256.resultHmac();
-
+    
+    // Copy result back into key_material for another iteration...
     for (uint8_t j = 0; j < RRDUINO_CLIENT_KEY_SIZE; j++) {
       key_material.x[j] = hmac_result[j];
     }
   }
   
-  // Our session key is now the mangled key material (sorry cryptographers)
-  for (uint8_t i = 0; i < RRDUINO_CLIENT_KEY_SIZE; i++) {
-    _session_key.x[i] = key_material.x[i];
+  // Copy result into the session key
+  for (uint8_t j = 0; j < RRDUINO_CLIENT_KEY_SIZE; j++) {
+    _session_key.x[j] = key_material.x[j];
   }
   
   return true;
@@ -126,7 +124,6 @@ void BaseRRDuinoClient::addUpdateField(String const& key, float value, boolean r
   print(value);
 
   if (requires_hmac) {
-    Sha256.initHmac(_session_key.x, RRDUINO_CLIENT_KEY_SIZE);
     Sha256.write(' ');
     Sha256.print(key);
     Sha256.write(' ');
@@ -141,7 +138,6 @@ void BaseRRDuinoClient::addUpdateField(String const& key, int value, boolean req
   print(value);
 
   if (requires_hmac) {
-    Sha256.initHmac(_session_key.x, RRDUINO_CLIENT_KEY_SIZE);
     Sha256.write(' ');
     Sha256.print(key);
     Sha256.write(' ');
@@ -156,7 +152,6 @@ void BaseRRDuinoClient::addUpdateField(String const& key, String const& value, b
   print(value);
 
   if (requires_hmac) {
-    Sha256.initHmac(_session_key.x, RRDUINO_CLIENT_KEY_SIZE);
     Sha256.write(' ');
     Sha256.print(key);
     Sha256.write(' ');

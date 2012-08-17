@@ -7,6 +7,8 @@
 
 class RRDuinoClient : public BaseRRDuinoClient { 
   private:
+  
+    // Here we're specifying our data sources and variables
     Thermistor _thermistor;
     float _temperature_C;
 

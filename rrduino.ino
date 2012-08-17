@@ -16,28 +16,33 @@ void setup() {
   Serial.begin(9600);
 
   while (Ethernet.begin(mac) == 0) {
-    Serial.println("Failed to configure Ethernet using DHCP");
+    Serial.println("FAIL: Ethernet.begin()");
     delay(5000);
   }
 
-  client.tickInterval(CAPTURE_DELAY);
+  client.tickInterval(CAPTURE_DELAY_MS);
+  client.setTimeout(5000);
+  
+  //
+  Serial.print(SERVER_IP);
+  Serial.print(':');
+  Serial.println(SERVER_PORT);
 }
   
 void loop() {
 
-  unsigned long last_tick; 
+  unsigned long last_tick;
 
   // Connect to server
   if (!client.connect(SERVER_IP, SERVER_PORT)) {
-    Serial.print("Could not connect to server at ");
-    Serial.println(SERVER_IP);
+    Serial.println("FAIL: client.connect()");
     delay(5000);
     return;
   }
   
   // Perform initial handshake
   if (!client.handshake()) {
-    Serial.println("Handshake failed.");
+    Serial.println("FAIL: client.handshake()");
     return;
   }
  
@@ -45,7 +50,7 @@ void loop() {
     // Remember when we are
     last_tick = millis();
 
-    // Tick .. 
+    // Tick ..
     if (client.tick()) {
       // .. and send an `update` command if necessary
       client.update();
@@ -53,8 +58,10 @@ void loop() {
     
     // Wait the difference, such that the total time between ticks is
     //   as close to client.tickInterval() as possible
-    delay(client.tickInterval() - (millis()-last_tick)); 
+    delay(client.tickInterval() - (millis()-last_tick));
   }
+  
+  client.stop();
   
   Serial.println("Disconnected");
 }

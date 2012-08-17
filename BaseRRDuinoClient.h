@@ -16,7 +16,7 @@ class BaseRRDuinoClient : public EthernetClient {
 
     unsigned long _tick_interval;
 
-    int read(byte* buf, uint16_t buf_length, unsigned long timeout_ms = 5000);
+    int readBytes(byte* buf, uint16_t buf_length, unsigned long timeout_ms = 5000);
 
   protected:
     // Key-related functions
@@ -28,6 +28,7 @@ class BaseRRDuinoClient : public EthernetClient {
     void addUpdateField(String const& key, float value, boolean requires_hmac = false);
     void addUpdateField(String const& key, int value, boolean requires_hmac = false);
     void addUpdateField(String const& key, String const& value, boolean requires_hmac = false);
+    // TODO add more versions of addUpdateField for more value types.
     void finalizeMessage(boolean requires_hmac = false);
 
   public:
