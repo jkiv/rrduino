@@ -18,6 +18,10 @@ To configure your device, edit `config.h` according to the instructions outlined
 
 `CAPTURE_DELAY_MS` - the time between collected and uploaded data points (in milliseconds)
 
+## Customizing RRDuinoClient
+
+TODO
+
 ## The Protocol
 
 The _rrduino_ protocol is simple. Each command is one line long (ending in a newline `\n`) with each argument separated by a single space. There are two commands so far: the __hello__ and the __update__.
