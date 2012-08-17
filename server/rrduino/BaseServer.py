@@ -25,8 +25,8 @@ class BaseServer:
                                           # (which we refer to as a "session")
 
         # Default session state
-        self.default_session = {'id'      : None,
-                                'key'     : None,
+        self.DEFAULT_SESSION = {'id'      : None,
+                                'key'     : None, # session key
                                 'profile' : None}
 
     def serve_forever(self):
@@ -70,7 +70,7 @@ class BaseServer:
                 self.open_sockets.append(new_socket)
 
                 # Initialize empty session for user
-                self.sessions[new_socket.fileno()] = self.default_session.copy()
+                self.sessions[new_socket.fileno()] = self.DEFAULT_SESSION.copy()
 
             else:
                 # Get connection's session data
@@ -84,7 +84,7 @@ class BaseServer:
                     # TODO: HandlerClass is specified on a connection-by-
                     #       connection basis allowing different devices to
                     #       send different types of messages.
-                    handler = self.HandlerClass(s, session)
+                    handler = self.HandlerClass(s, session, **session['profile']['handler_options'])
                     handler.handle()
 
                 except Exception as e:

@@ -1,29 +1,37 @@
 import logging
+import rrdtool
+
 from BaseHandler import *
 
 class RRDuinoHandler(BaseHandler):
     '''Updates an rrdtool database for the connected client.
-       Subclasses implement specifics about their rrdtool database.
     '''
     
-    def __init__(self, sock, session):
+    def __init__(self, sock, session, **kwargs):
         BaseHandler.__init__(self, sock, session)
         
         # Register 'update' message type
         self.register_message_type('u', self.handle_update, True)
+
+        # TODO validate arguments
+
+        # Unpack kwargs 
+        self.rrd_path         = kwargs['path']
+        self.update_format    = kwargs['update']
+        self.create_arguments = kwargs['create']
         
-    def create(self, path):
-        '''Implemented to create the rrd database if it does not
-           exist. Path to database should be profile['rrd'].
+    def create(self):
+        '''Creates rrdtool database based on
+           profile['handler_options']['create'] (i.e. self.create_arguments).
         '''
-        pass
+        rrdtool.create(self.rrd_path, *self.create_arguments)
         
-    def update(self, profile, **kwargs):
-        '''Update the database given **kwargs. Path to database
-           should be profile['rrd']. A particular implementation
-           knows what values in **kwargs to expect from the client.
+    def update(self, **kwargs):
+        '''Update the database given **kwargs. Format of update
+           command is specified in profile['handler_options']['update']
+           (i.e. self.update_format).
         '''
-        pass
+        rrdtool.update(self.rrd_path, self.update_format.format(**kwargs))
 
     def handle_update(self, data):
         '''Handles an 'update' command.
@@ -45,8 +53,8 @@ class RRDuinoHandler(BaseHandler):
             raise InvalidRequest("Malformed data")
 
         # Create profile if it doesn't exist
-        if not os.path.isfile(self.session['profile']['rrd']):
-            self.create(self.session['profile'])
+        if not os.path.isfile(self.rrd_path):
+            self.create()
 
         # Update the rrd database
-        self.update(self.session['profile'], **dict(zip(sources, data)))
+        self.update(**dict(zip(sources, data)))
