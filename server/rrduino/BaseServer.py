@@ -27,6 +27,7 @@ class BaseServer:
         # Default session state
         self.DEFAULT_SESSION = {'id'      : None,
                                 'key'     : None, # session key
+                                'handler' : None,
                                 'profile' : None}
 
     def serve_forever(self):
@@ -78,13 +79,17 @@ class BaseServer:
 
                 # Handle the request
                 try:
-                    # We use self.HandlerClass to handle the ready socket.
-                    # In practise, a subclass of BaseHandler is written for
-                    # the user's particular needs.
-                    # TODO: HandlerClass is specified on a connection-by-
-                    #       connection basis allowing different devices to
-                    #       send different types of messages.
-                    handler = self.HandlerClass(s, session, **session['profile']['handler_options'])
+                    # If the session doesn't have a profile use a temporary BaseHandler.
+                    # If the session has a profile, use the existing handler or create it.
+                    if session['profile']:
+                      if session['handler']:
+                        handler = session['handler']
+                      else:
+                        handler = self.HandlerClass(s, session, **session['profile']['handler_options'])
+                    else:
+		      handler = BaseHandler(s, session)
+                    
+                    # Handle the client
                     handler.handle()
 
                 except Exception as e:

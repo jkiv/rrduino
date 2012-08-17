@@ -30,7 +30,7 @@ class BaseHandler:
     # Number of times to hash key material
     key_gen_rounds = 128
     
-    def __init__(self, sock, session):
+    def __init__(self, sock, session, **options):
         self.session = session
         self.socket = sock
         self.rfile_up()
@@ -39,6 +39,15 @@ class BaseHandler:
         
         # Register standard messages
         self.register_message_type('h', self.handle_hello, False)
+
+    @classmethod
+    def validate_options(cls, opts):
+      ''' Validates optional **kwargs passed to handler. 
+          Should be implemented by derived classes.
+          If a derived class wants to pass validations to its base class
+          then it should use super() or similar.
+      '''
+      pass
 
     def register_message_type(self, message_type, handler_function, requires_hmac = False):
         """
@@ -86,19 +95,27 @@ class BaseHandler:
         self.session['id'] = client_id
 
         # Load client profile
-        self.session['profile'] = profile.load(client_id)
+        self.session['profile'] = profile.load_for(client_id)
+        self.session['profile']['key'] = hashlib.sha256(self.session['profile']['key']).digest()
 
         # Generate key material and key
         key_material = os.urandom(32)
 
         # Send key material for the session
         self.socket.send(key_material)
+ 
+        logging.debug("key_material={0}".format([key_material]))
+        logging.debug("master_key={0}".format([self.session['profile']['key']]))
 
         # Generate session key
-        for i in range(self.key_gen_rounds):
-            key_material = hmac.new(self.session['profile']['key'], key_material, hashlib.sha256).digest()
+        H = hmac.new(self.session['profile']['key'], key_material, hashlib.sha256)
 
-        self.session['key'] = key_material # (sorry cryptographers)
+        for i in range(self.key_gen_rounds):
+	  H.update(H.digest())
+
+        self.session['key'] = H.digest() # (sorry cryptographers)
+
+        logging.debug("session_key={0}".format([self.session['key']]))
 
     def verify_hmac(self, message):
         """
@@ -114,7 +131,6 @@ class BaseHandler:
             raise InvalidRequest("Malformed HMAC")
 
         # Check HMAC
-        logging.debug("canonical_string={0}".format([canonical_string]))
         our_hmac = hmac.new(self.session['key'], canonical_string, hashlib.sha256).hexdigest()
         
         if our_hmac != their_hmac:
@@ -122,7 +138,7 @@ class BaseHandler:
             raise InvalidRequest("Bad HMAC")
         
     def advance_key(self):
-        self.session['key'] = hmac.new(self.session['key'], self.session['key'], hashlib.sha256).digest()
+        self.session['key'] = hmac.new(self.session['profile']['key'], self.session['key'], hashlib.sha256).digest()
     
     def handle(self):
         """
@@ -145,6 +161,7 @@ class BaseHandler:
          
         # Authenticate message if required
         if message_type in self.message_uses_hmac:
+            logging.debug("session_key={0}".format([self.session['key']]))
             # Verify HMAC
             self.verify_hmac(message)
             

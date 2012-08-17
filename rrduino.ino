@@ -6,8 +6,10 @@
 #include "config.h"
 #include "Thermistor.h"
 #include "Key.h"
-#include "RRDClient.h"
+#include "BaseRRDuinoClient.h"
+#include "RRDuinoClient.h"
 
+RRDuinoClient client(CLIENT_ID, CLIENT_KEY);
 byte mac[6] = CLIENT_MAC;
 
 void setup() {
@@ -17,17 +19,14 @@ void setup() {
     Serial.println("Failed to configure Ethernet using DHCP");
     delay(5000);
   }
+
+  client.tickInterval(CAPTURE_DELAY);
 }
   
 void loop() {
-  
-  RRDClient  client(CLIENT_ID, CLIENT_KEY);
-  Thermistor thermistor(A0);
-  
-  float temperature_C = 0.0f; // temperature reading
-  long capture_start  = 0;
-  long wait_time      = 0;
-  
+
+  unsigned long last_tick; 
+
   // Connect to server
   if (!client.connect(SERVER_IP, SERVER_PORT)) {
     Serial.print("Could not connect to server at ");
@@ -41,25 +40,20 @@ void loop() {
     Serial.println("Handshake failed.");
     return;
   }
-  
-  // Continually get data
+ 
   while(client.connected()) {
-    // Tick!
-    capture_start = millis();
-    
-    // Get the temperature
-    temperature_C = thermistor.read();
-    
-    // Send the temperature
-    client.update(temperature_C);
-    
-    // Tock! How long did that take?
-    // We'll wait the remainder such that the total elapsed time is CAPTURE_DELAY
-    wait_time = CAPTURE_DELAY - (millis() - capture_start);
+    // Remember when we are
+    last_tick = millis();
 
-    if (wait_time > 0) {
-      delay(wait_time);
+    // Tick .. 
+    if (client.tick()) {
+      // .. and send an `update` command if necessary
+      client.update();
     }
+    
+    // Wait the difference, such that the total time between ticks is
+    //   as close to client.tickInterval() as possible
+    delay(client.tickInterval() - (millis()-last_tick)); 
   }
   
   Serial.println("Disconnected");

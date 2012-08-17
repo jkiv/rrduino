@@ -7,31 +7,42 @@ class RRDuinoHandler(BaseHandler):
     '''Updates an rrdtool database for the connected client.
     '''
     
-    def __init__(self, sock, session, **kwargs):
-        BaseHandler.__init__(self, sock, session)
+    def __init__(self, sock, session, **options):
+        BaseHandler.__init__(self, sock, session, **options)
         
-        # Register 'update' message type
+        # Register 'u' (update) message type
         self.register_message_type('u', self.handle_update, True)
 
-        # TODO validate arguments
-
-        # Unpack kwargs 
-        self.rrd_path         = kwargs['path']
-        self.update_format    = kwargs['update']
-        self.create_arguments = kwargs['create']
+        # Unpack options
+        self.rrd_path         = str(options['path'])
+        self.update_format    = str(options['update'])
+        self.create_arguments = [str(x) for x in options['create']]
         
+    @classmethod
+    def validate_options(cls, opts):
+        # Validations for handler options
+
+        if not opts['path']:
+            raise ValueError("\"handler_options\": an rrdtool database path (\"path\") is required.")
+
+        if not opts['create']:
+            raise ValueError("\"handler_options\": rrdtool database creation arguments (\"create\") are required.")
+
+        if not opts['update']:
+            raise ValueError("\"handler_options\": rrdtool database update statement (\"update\") is required.")
+
     def create(self):
         '''Creates rrdtool database based on
            profile['handler_options']['create'] (i.e. self.create_arguments).
         '''
         rrdtool.create(self.rrd_path, *self.create_arguments)
         
-    def update(self, **kwargs):
-        '''Update the database given **kwargs. Format of update
+    def update(self, **data):
+        '''Update the database given **data. Format of update
            command is specified in profile['handler_options']['update']
            (i.e. self.update_format).
         '''
-        rrdtool.update(self.rrd_path, self.update_format.format(**kwargs))
+        rrdtool.update(self.rrd_path, self.update_format.format(**data))
 
     def handle_update(self, data):
         '''Handles an 'update' command.

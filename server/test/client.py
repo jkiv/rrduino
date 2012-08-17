@@ -1,7 +1,6 @@
 import socket
 import os, sys
 import hmac, hashlib
-import cPickle as pickle
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
@@ -12,8 +11,12 @@ if len(sys.argv) != 3:
 
 HOST, PORT = sys.argv[1], int(sys.argv[2])
 
-client_id = 'test' 
-profile = {'key' : hashlib.sha256('test').digest()}
+client_id = 'example' 
+client_psk = 'secret123'
+
+profile = {
+            'key': hashlib.sha256(client_psk).digest()
+          }
 
 def send_hello(sock, client_id):
     """
@@ -33,26 +36,33 @@ def send_update(sock, session_key, **kwargs):
     Send an 'update' message
     """
     data = "u " + ' '.join(str(k) + ' ' + str(v) for k,v in kwargs.iteritems())
+
     our_hmac = hmac.new(session_key, data, hashlib.sha256).hexdigest()
+
     logging.debug("Sending '{0} {1}\\n'".format(data, our_hmac))
     sock.send("{0} {1}\n".format(data, our_hmac))
 
-def rollover_key(key):
+def rollover_key(master_key, session_key):
     """
     Move session key forward
     """
-    return hmac.new(key, key, hashlib.sha256).digest()
+    return hmac.new(master_key, session_key, hashlib.sha256).digest()
 
 def generate_session_key(master_key, key_material):
     """
     Turn key material into the session key
     """
+
+    H = hmac.new(master_key, key_material, hashlib.sha256)
+
     for i in range(128):
-        key_material = hmac.new(master_key, key_material, hashlib.sha256).digest()
+        H.update(H.digest())
 
-    logging.debug("session_key={0}".format([key_material]))
+    session_key = H.digest() # (sorry cryptographers)
 
-    return key_material # (sorry cryptographers)
+    logging.debug("session_key={0}".format([session_key]))
+
+    return session_key # (sorry cryptographers)
 
 if __name__ == "__main__":
 
@@ -72,20 +82,23 @@ if __name__ == "__main__":
     
         # Send an update message
         data = {'temperature': 10.0}
+        logging.debug("session_key={0}".format([session_key]))
         send_update(sock, session_key, **data)
-        session_key = rollover_key(session_key)
+        session_key = rollover_key(profile['key'], session_key)
         raw_input('Press any key to continue...')
     
         # Send an update message
         data = {'temperature': 20.0}
+        logging.debug("session_key={0}".format([session_key]))
         send_update(sock, session_key, **data)
-        session_key = rollover_key(session_key)
+        session_key = rollover_key(profile['key'], session_key)
         raw_input('Press any key to continue...')
     
         # Send an update message
         data = {'temperature': 30.0}
+        logging.debug("session_key={0}".format([session_key]))
         send_update(sock, session_key, **data)
-        session_key = rollover_key(session_key)
+        session_key = rollover_key(profile['key'], session_key)
         raw_input('Press any key to continue...')
     
     finally:

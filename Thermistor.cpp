@@ -1,4 +1,3 @@
-
 #include "Thermistor.h"
 
 Thermistor::Thermistor(int pin)
@@ -8,7 +7,9 @@ Thermistor::Thermistor(int pin)
 }
 
 float Thermistor::read() {
-  // Based on ladyada's thermistor tutorial: http://www.ladyada.net/learn/sensors/thermistor.html
+  // Based on ladyada's thermistor tutorial:
+  //   http://www.ladyada.net/learn/sensors/thermistor.html
+
   int samples[THERMISTOR_SAMPLE_COUNT];
   float temperature = 0.0f;
   

@@ -12,53 +12,56 @@ Configuration
 
 `rrduino/config.py` contains the configuration file for the rrduino server. 
 
-`PROFILE_DIR` - the directory which will contain the user profiles. It is strongly recommended that this be set to a valid directory, writable to by the server.
-
-`HANDLER` - the class name for the handler that the server will use. Change this to reflect the name of your own handler. Make sure to import the handler you wish to use. (Right now there is one handler type for all clients. This is subject to change as development continues.)
+`PROFILE_DIR` - the directory which will contain the user profiles. It is strongly recommended that this be set to a valid directory, writable by the server.
 
 `PORT` - the port to listen on. Feel free to change this to your liking.
 
 `HOST` - the host to bind to. `0.0.0.0` should suffice for general use, however, it is assumed that the server is running behind a NAT router or other type of firewall.
 
-`DEFAULT_PROFILE` - the default profile state. This should only be changed by developers who have added or removed features of the profile.
-
 Creating Profiles
 -----------------
 
-A profile stores information about a client. This information includes the client's pre-shared key and a path to an rrdtool database. A single server can handle many clients of the same type.
+A profile stores information about a client. This information includes the client's pre-shared key and information about its rrdtool database. A single server can handle many clients which may collect and record various types of data.
 
-Before proceeding, make sure `rrduino/config.py` contains the path to the directory which will store the profiles.
+Before proceeding, make sure `rrduino/config.py` contains the path to the directory which will store all the profiles (`PROFILE_DIR`).
 
-For example, to create a profile for `fridge`
+Each client has its own profile file. The filenames are derived from the client's ID.
 
-`server.py -c fridge -r /path/to/fridge.rrd`
+Profiles are JSON-formatted objects. Here is an example profile:
 
-You can also specify the key using the -k option, but if it is omitted then you will be prompted for a key.
+    {
+      "key": "secret123",
+      "handler_options": {
+        "path": "/path/to/example.rrd",
+        "create": ["--step", "60",
+                   "DS:temperature:GAUGE:120:-50:110",
+                   "RRA:AVERAGE:0.5:5:288",
+                   "RRA:AVERAGE:0.5:60:720",
+                   "RRA:AVERAGE:0.5:240:1096"],
+        "update": "N:{temperature}"
+      }
+    }
 
-The above will create a profile for the client `fridge` which will use the rrdtool database `/path/to/fridge.rrd`.
+The root object contains two values:
 
-Writing a Handler
------------------
+`key` - the client's pre-shared key.
+`handler_options` - options for managing an `rrdtool` database
 
-In order to create or update an rrd database properly, a handler needs to be written.
+By default, `handler_options` expects three values:
 
-Handlers which update rrdtool databases are classes which derive from `RRDuinoHandler`. Handlers should implement the following two methods:
+`path` - the full file path to the `rrdtool` database.
+`create` - a list of options used to instantiate the `rrdtool` database. (Technically speaking, these strings correspond to `rrdtool.create` options.)
+`update` - a string used to update the `rrdtool` database. In the above example, we are expecting the client to send a value with the key `temperature` in its `update` commands (as shown by the use of `{temperature}`).
 
-`create(self, profile, **kwargs)` - called before updating if the rrd database does not exist.
+Custom Handlers
+---------------
 
-`update(self, profile, **kwargs)` - called when an update message is received from the client. Key-value pairs sent by the client are available in `kwargs`. The path to the rrd database is available by `profile['rrd']`.
+`RRDuinoHandler` is a handler with rrduino-specific functionality. It provides a way for handling `update` commands and manipulating an `rrdtool` database in your own way.
 
-Handlers are placed in `rrduino/` and set for use in `rrduino/config.py`.
+For general purpose applications, `BaseHandler` contains all that is necessary for performing the handshake (`hello` command), registering arbitrary message types, and automagically checking the HMAC of each message if desired.
 
-`rrduino/ExampleRRDHandler.py` shows which functions a handler should implement. `rrduino/CarboyHandler.py` contains an example implementation of a handler.
+The values specified in a profile's `handler_options` are passed to a handler object upon creation via `**options`. This allows profiles to work along-side any `BaseHandler`-derived object seemlessly.
 
-(Right now there is one handler type for all clients. This is subject to change as development continues.)
-
-Very Custom Handlers
---------------------
-
-`RRDuinoHandler` is a handler with rrduino-specific functionality. It provides a way for handling 'update' commands and an interface for extending the handling capabilities (i.e. manipulating an rrd database in your own way).
-
-For general purpose applications, `BaseHandler` contains all that is necessary for performing the handshake ('hello' command), registering arbitrary message types, and automagically checking the HMAC of each message (if desired).
+For validating options, `BaseHandler` will call the class method `validate_options` when instantiating any `BaseHandler`-derived class. If deriving from another handler class such as `RRDuinoHandler`, it may be necessary to call `validate_options` on the base class manually during validations.
 
 See `rrduino/RRDuinoHandler.py` for an example of how `BaseHandler` can be extended to accomodate other message types.
