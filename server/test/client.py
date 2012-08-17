@@ -53,12 +53,10 @@ def generate_session_key(master_key, key_material):
     Turn key material into the session key
     """
 
-    H = hmac.new(master_key, key_material, hashlib.sha256)
-
     for i in range(128):
-        H.update(H.digest())
+      key_material = hmac.new(master_key, key_material, hashlib.sha256).digest()
 
-    session_key = H.digest() # (sorry cryptographers)
+    session_key = key_material # (sorry cryptographers)
 
     logging.debug("session_key={0}".format([session_key]))
 
