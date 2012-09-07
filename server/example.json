@@ -1,5 +1,6 @@
   {
     "key": "secret123",
+    "handler": "RRDuinoHandler",
     "handler_options": {
       "path": "/path/to/rrduino/rrds/example.rrd",
       "create": ["--step", "60",
