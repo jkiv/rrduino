@@ -51,7 +51,7 @@ def load(profile_path):
         profile.update(json.load(f))
 
     # Convert handler class name from string to a class
-    if isinstance(profile['handler'], string):
+    if isinstance(profile['handler'], basestring):
         profile['handler'] = import_handler_class(profile['handler'])
 
     # Validate profile
