@@ -1,6 +1,6 @@
 # rrduino
 
-![Project status: on ice](https://img.shields.io/badge/project status-on_ice-blue.svg)
+![Project status: on ice](https://img.shields.io/badge/project%20status-on_ice-blue.svg)
 
 The goal of this project is to make the _Arduino_ (http://www.arduino.cc/) a versitile little time-based data collection device. The data that the _Arduino_ collects is to be sent of to a server over Ethernet (TCP/IP) where the data can be added to an _rrdtool_ database (http://oss.oetiker.ch/rrdtool/).
 
